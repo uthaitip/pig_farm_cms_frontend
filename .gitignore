@@ -1,0 +1,31 @@
+# Nuxt
+.nuxt/
+.output/
+.nitro/
+.cache/
+
+# Build
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code
+CLAUDE.md

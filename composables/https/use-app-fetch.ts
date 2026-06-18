@@ -6,9 +6,7 @@ function useAppFetch<T>(url: any, options: UseFetchOptions<T> = {}, isClient: Bo
   const sLoadingState = useState<ILoading>('globalBaseLoading')
   const config        = useRuntimeConfig()
 
-  const baseUrl = url.startsWith('/bff/')
-    ? config.public.apiBff
-    : config.public.apiCms
+  const baseUrl = config.public.apiCms
 
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> ?? {}),

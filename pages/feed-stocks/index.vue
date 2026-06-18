@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="flex items-start justify-between pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">คลังอาหารและยา</h3>
     </div>
 
-    <!-- Search + Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2 flex-wrap">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -15,24 +13,23 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="feedStocks ?? {}" :show-running="true"
         @onChangePage="onChangePage">
         <template #feedTypeId="{ data }">
-          <span>{{ data?.includeFeedType?.feedCode }} - {{ data?.includeFeedType?.feedName }}</span>
+          <span>{{ data?.feedTypeId?.feedCode }} - {{ data?.feedTypeId?.feedName }}</span>
         </template>
         <template #category="{ data }">
           <div class="flex justify-center">
             <span class="px-2 py-0.5 rounded-full text-base font-medium"
-              :class="supplyCategoryClass(data.includeFeedType?.category)">
-              {{ supplyCategoryLabel(data.includeFeedType?.category) }}
+              :class="supplyCategoryClass(data.feedTypeId?.category)">
+              {{ supplyCategoryLabel(data.feedTypeId?.category) }}
             </span>
           </div>
         </template>
         <template #currentQuantity="{ data }">
           <div class="flex justify-center">
-            <span>{{ data.currentQuantity?.toLocaleString() }} {{ data.includeFeedType?.unit }}</span>
+            <span>{{ data.currentQuantity?.toLocaleString() }} {{ data.feedTypeId?.unit }}</span>
           </div>
         </template>
         <template #action="{ data }">
@@ -47,8 +44,6 @@
 </template>
 
 <script lang="ts">
-import { apiBffFeedStocks, apiBffFeedStocksIn, apiBffFeedStocksOut, apiBffPigBatches } from '~/composables/api-bff'
-
 const CATEGORY_OPTIONS = [
   { label: 'ทั้งหมด', value: '' },
   { label: 'อาหาร', value: 'FEED' },
@@ -106,7 +101,7 @@ export default {
     async reloadData(page: number = 1) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffFeedStocks, {
+        const response = await useFetchGetClient(apiSvcFeedStocks, {
           params: {
             page,
             limit: 10,
@@ -134,7 +129,7 @@ export default {
     },
 
     async loadBatches() {
-      const response = await useFetchGetClient(apiBffPigBatches, {
+      const response = await useFetchGetClient(apiSvcPigBatches, {
         params: { page: 1, limit: 999, filter: { status: 'ACTIVE' } },
       })
       this.batches = getSuccessDataClient(response)?.list ?? []
@@ -149,7 +144,7 @@ export default {
     async handleSubmit({ type, stockId, payload }: { type: 'IN' | 'OUT'; stockId: string; payload: any }) {
       this.sLoadingState?.show()
       try {
-        const url = type === 'IN' ? apiBffFeedStocksIn(stockId) : apiBffFeedStocksOut(stockId)
+        const url = type === 'IN' ? apiSvcFeedStocksIn(stockId) : apiSvcFeedStocksOut(stockId)
         const response = await useFetchPostClient(url, payload)
         if (!isSuccessClient(response)) {
           (this.$refs.modalTx as any)?.setError(getErrorMessageClient(response))

@@ -88,7 +88,7 @@ export default {
 
   computed: {
     menuList(): any[] {
-      const menus: any[] = (this.profile as any)?.includeRole?.includeMenus ?? []
+      const menus: any[] = (this.profile as any)?.roleId?.menuIds ?? []
       return menus
         .filter((m: any) => !m.parentId)
         .map((m: any) => ({

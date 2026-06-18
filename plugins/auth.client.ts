@@ -7,7 +7,7 @@ export default defineNuxtPlugin(async () => {
   if (!token.value && !refreshToken.value) return
 
   const fetchMe = async (accessToken: string) => {
-    const res = await $fetch<any>(`${config.public.apiBff}${BFF_API.me}`, {
+    const res = await $fetch<any>(`${config.public.apiCms}${apiSvcAuthMe}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
     profile.value = res?.data ?? res

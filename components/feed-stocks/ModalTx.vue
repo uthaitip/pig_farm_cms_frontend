@@ -1,19 +1,17 @@
 <template>
   <UIBaseModal id="modal-feed-tx"
-    :title="txType === 'IN' ? `รับเข้า · ${stock?.includeFeedType?.feedName}` : `เบิกใช้ · ${stock?.includeFeedType?.feedName}`"
+    :title="txType === 'IN' ? `รับเข้า · ${stock?.feedTypeId?.feedName}` : `เบิกใช้ · ${stock?.feedTypeId?.feedName}`"
     width="max-w-sm" :show-footer="false" @on-created="(m: any) => (modal = m)">
     <div class="flex flex-col gap-3">
       <div class="space-y-3">
-        <!-- Current stock info -->
         <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2">
           <span class="text-xs text-appgray">คงเหลือปัจจุบัน</span>
           <span class="font-bold text-appblack">
             {{ stock?.currentQuantity?.toLocaleString() }}
-            <span class="text-sm font-normal">{{ stock?.includeFeedType?.unit }}</span>
+            <span class="text-sm font-normal">{{ stock?.feedTypeId?.unit }}</span>
           </span>
         </div>
 
-        <!-- Quantity -->
         <div>
           <label class="text-xs text-appgray mb-1 block">
             {{ txType === 'IN' ? 'จำนวนที่รับเข้า' : 'จำนวนที่เบิก' }}
@@ -21,10 +19,11 @@
           </label>
           <input v-model.number="txForm.quantity" type="number" min="1" placeholder="0"
             class="w-full border border-gray-300 text-sm rounded-lg px-3 py-2 outline-none focus:ring-primary-500 focus:border-primary-500"
+            :class="formErrors.quantity ? 'border-apperror' : ''"
             @input="calcTotal" />
+          <p v-if="formErrors.quantity" class="text-xs text-apperror mt-0.5">{{ formErrors.quantity }}</p>
         </div>
 
-        <!-- IN only: price -->
         <template v-if="txType === 'IN'">
           <div>
             <label class="text-xs text-appgray mb-1 block">ราคาต่อหน่วย (บาท)</label>
@@ -40,16 +39,15 @@
           </div>
         </template>
 
-        <!-- Date -->
         <div>
           <ClientOnly fallback-tag="span" fallback="">
             <UIBaseDatePicker
               :field="{ key: 'transactionDate', label: 'วันที่', value: txForm.transactionDate, required: true, useForm: false, width: 'full' }"
               @onChange="onTxDateChange" />
           </ClientOnly>
+          <p v-if="formErrors.transactionDate" class="text-xs text-apperror mt-0.5">{{ formErrors.transactionDate }}</p>
         </div>
 
-        <!-- OUT only: batch -->
         <div v-if="txType === 'OUT'">
           <label class="text-xs text-appgray mb-1 block">ล็อตหมู (ถ้ามี)</label>
           <select v-model="txForm.batchId"
@@ -61,7 +59,6 @@
           </select>
         </div>
 
-        <!-- Note -->
         <div>
           <label class="text-xs text-appgray mb-1 block">หมายเหตุ</label>
           <input v-model="txForm.note" type="text" placeholder="หมายเหตุ (ถ้ามี)"
@@ -85,15 +82,27 @@
 
 <script lang="ts">
 import type { Modal } from 'flowbite'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 import { formatNumberComma, formatNumberByString, numberDecimalOnly } from '~/composables/constants/number'
 
 const EMPTY_FORM = { quantity: null as number | null, unitPrice: '', totalAmount: '', transactionDate: '', batchId: '', note: '' }
+
+const validationSchema = toTypedSchema(zod.object({
+  quantity:        zod.number({ required_error: 'กรุณาระบุจำนวน', invalid_type_error: 'กรุณาระบุจำนวน' }).min(1, 'จำนวนต้องมากกว่า 0'),
+  transactionDate: zod.string({ required_error: 'กรุณาระบุวันที่' }).min(1, 'กรุณาระบุวันที่'),
+}))
 
 export default {
   props: {
     batches: { type: Array, default: () => [] },
   },
   emits: ['onSubmit'],
+
+  setup() {
+    const { validate, setValues, errors } = useForm({ validationSchema })
+    return { validate, setValues, formErrors: errors }
+  },
 
   data() {
     return {
@@ -147,12 +156,13 @@ export default {
       }
     },
 
-    onSubmit() {
+    async onSubmit() {
       this.txError = ''
-      if (!this.txForm.quantity || this.txForm.quantity <= 0) { this.txError = 'กรุณาระบุจำนวนที่ถูกต้อง'; return }
-      if (!this.txForm.transactionDate) { this.txError = 'กรุณาระบุวันที่'; return }
+      this.setValues({ quantity: this.txForm.quantity ?? undefined, transactionDate: this.txForm.transactionDate })
+      const { valid } = await this.validate()
+      if (!valid) return
       if (this.txType === 'OUT' && this.txForm.quantity > (this.stock?.currentQuantity ?? 0)) {
-        this.txError = `ไม่สามารถเบิกได้ — คงเหลือมีเพียง ${(this.stock?.currentQuantity ?? 0).toLocaleString()} ${this.stock?.includeFeedType?.unit ?? ''}`
+        this.txError = `ไม่สามารถเบิกได้ — คงเหลือมีเพียง ${(this.stock?.currentQuantity ?? 0).toLocaleString()} ${this.stock?.feedTypeId?.unit ?? ''}`
         return
       }
 

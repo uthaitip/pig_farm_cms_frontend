@@ -6,17 +6,9 @@
 
     <div class="flex items-end gap-3 pt-4 pb-2">
       <div class="w-64">
-        <UIBaseInputField
-          :field="{ key: 'search', label: '', type: 'text', placeholder: 'ค้นหารหัสรุ่น, ชื่อรุ่น...', value: searchText, useForm: false, prefixIcon: 'magnifying-glass' }"
-          @onChange="onSearchChange" />
+        <UIBaseInputField :field="{ ...fieldSearch, value: searchText }" @onChange="onSearchChange" />
       </div>
-      <UIBaseDropdown :field="{
-        key: 'filterStatus', label: '', useForm: false, value: filterStatus, children: [
-          { label: 'ทุกสถานะ',   value: '' },
-          { label: 'กำลังเลี้ยง', value: 'ACTIVE' },
-          { label: 'ปิดรุ่นแล้ว', value: 'CLOSED' },
-        ]
-      }" @onChange="onFilterStatusChange" />
+      <UIBaseDropdown :field="{ ...fieldFilterStatus, value: filterStatus }" @onChange="onFilterStatusChange" />
       <div class="ml-auto">
         <button class="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg"
           @click="onClickAdd">
@@ -30,8 +22,7 @@
         @onChangePage="onChangePage">
         <template #sourceType="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-              :class="data.sourceType === 'BORN' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="SourceTypePigColor[data.sourceType]">
               {{ SourceTypeMsg[data.sourceType] }}
             </span>
           </div>
@@ -41,9 +32,8 @@
         </template>
         <template #status="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-              :class="data.status === 'ACTIVE' ? 'bg-green-100 text-appsuccess' : 'bg-gray-100 text-appgray'">
-              {{ data.status === 'ACTIVE' ? 'กำลังเลี้ยง' : 'ปิดรุ่นแล้ว' }}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="StatusPigBatchsColor[data.status]">
+              {{ StatusPigBatchsMsg[data.status] }}
             </span>
           </div>
         </template>
@@ -82,21 +72,29 @@ export default {
 
   data() {
     return {
-      items:         {} as IPagination<IPigBatch>,
-      currentPage:   1,
-      searchText:    '' as string,
-      filterStatus:  '' as string,
+      items: {} as IPagination<IPigBatch>,
+      currentPage: 1,
+      searchText: '' as string,
+      filterStatus: '' as string,
       debounceTimer: null as ReturnType<typeof setTimeout> | null,
+      fieldSearch: { key: 'search', label: '', type: 'text', placeholder: 'ค้นหารหัสรุ่น, ชื่อรุ่น...', useForm: false, prefixIcon: 'magnifying-glass' } as IInputField,
+      fieldFilterStatus: {
+        key: 'filterStatus', label: '', useForm: false, children: [
+          { label: 'ทุกสถานะ', value: '' },
+          { label: StatusPigBatchsMsg[StatusPigBatchs.active], value: StatusPigBatchs.active },
+          { label: StatusPigBatchsMsg[StatusPigBatchs.inActive], value: StatusPigBatchs.inActive },
+        ]
+      } as IInputField,
       tableOptions: [
-        { field: 'batchCode',        label: 'รหัสรุ่น',      headerAlign: 'text-left',   dataAlign: 'text-left',   width: 'w-32' },
-        { field: 'batchName',        label: 'ชื่อรุ่น',      headerAlign: 'text-left',   dataAlign: 'text-left' },
-        { field: 'sourceType',       label: 'แหล่งที่มา',    headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'initialQuantity',  label: 'จำนวนเริ่มต้น', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'currentQuantity',  label: 'จำนวนปัจจุบัน', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'receivedDate',     label: 'วันที่รับเข้า',  headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'status',           label: 'สถานะ',          headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'action',           label: 'จัดการ',         headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-44' },
-      ] as any[],
+        { field: 'batchCode', label: 'รหัสรุ่น', headerAlign: 'text-left', dataAlign: 'text-left', width: 'w-[15%]' },
+        { field: 'batchName', label: 'ชื่อรุ่น', headerAlign: 'text-left', dataAlign: 'text-left' },
+        { field: 'sourceType', label: 'แหล่งที่มา', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[12%]' },
+        { field: 'initialQuantity', label: 'จำนวนนำเข้า', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[10%]' },
+        { field: 'currentQuantity', label: 'จำนวนปัจจุบัน', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[10%]' },
+        { field: 'receivedDate', label: 'วันที่รับเข้า', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[10%]' },
+        { field: 'status', label: 'สถานะ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[10%]' },
+        { field: 'action', label: 'จัดการ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-[12%]' },
+      ] as ITableOption[],
     }
   },
 
@@ -106,14 +104,18 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPigBatches, {
+        const response = await useFetchGetClient(apiSvcPigBatches, {
           params: {
-            page:   this.currentPage,
-            limit:  10,
+            page: this.currentPage,
+            limit: 10,
             search: this.searchText.trim(),
-            filter: this.filterStatus ? JSON.stringify({ status: this.filterStatus }) : undefined,
+            filter: this.filterStatus ? JSON.stringify({ status: this.filterStatus }) : {},
           },
         })
+        if (!isSuccessClient(response)) {
+          this.sAlertState?.show(defaultAlertError(getErrorMessageClient(response)))
+          return
+        }
         this.items = getSuccessDataClient(response) ?? {}
       } finally {
         this.sLoadingState?.hide()
@@ -137,15 +139,15 @@ export default {
     },
 
     onClickAdd() {
-      (this.$refs.modalBatchForm as any).show()
+      (this.$refs.modalBatchForm as IModalRef).show()
     },
 
     onClickEdit(row: any) {
-      (this.$refs.modalBatchForm as any).show(row)
+      (this.$refs.modalBatchForm as IModalRef).show(row)
     },
 
     onClickTransaction(row: any) {
-      (this.$refs.modalBatchTx as any).show(row)
+      (this.$refs.modalBatchTx as IModalRef).show(row)
     },
 
     onClickDelete(id: string) {
@@ -154,8 +156,15 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffPigBatchesById(id))
+            const res = await useFetchDeleteClient(`${apiSvcPigBatches}/${id}`)
+            if (!isSuccessClient(res)) {
+              this.sAlertState?.show(defaultAlertError(getErrorMessageClient(res)))
+              return
+            }
             await this.reloadData()
+            this.sAlertState?.show(defaultAlertSuccess('ลบรุ่นหมูสำเร็จ'))
+          } catch (e: any) {
+            this.sAlertState?.show(defaultAlertError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่'))
           } finally {
             this.sLoadingState?.hide()
           }
@@ -167,17 +176,17 @@ export default {
       this.sLoadingState?.show()
       try {
         const response = !editId
-          ? await useFetchPostClient(apiBffPigBatches, payload)
-          : await useFetchPutClient(apiBffPigBatchesById(editId), payload)
+          ? await useFetchPostClient(apiSvcPigBatches, payload)
+          : await useFetchPutClient(apiSvcPigBatchesById(editId), payload)
         if (!isSuccessClient(response)) {
-          ;(this.$refs.modalBatchForm as any).setError(getErrorMessageClient(response))
+          ; (this.$refs.modalBatchForm as IModalRef).setError(getErrorMessageClient(response))
           return
         }
-        ;(this.$refs.modalBatchForm as any).hide()
+        ; (this.$refs.modalBatchForm as IModalRef).hide()
         this.sAlertState?.show(defaultAlertSuccess(editId ? 'แก้ไขรุ่นหมูสำเร็จ' : 'เพิ่มรุ่นหมูสำเร็จ'))
         await this.reloadData()
       } catch (e: any) {
-        ;(this.$refs.modalBatchForm as any).setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
+        ; (this.$refs.modalBatchForm as IModalRef).setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
       } finally {
         this.sLoadingState?.hide()
       }
@@ -186,19 +195,19 @@ export default {
     async onHandleTxSubmit({ batchId, payload }: { batchId: string; payload: any }) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPostClient(apiBffPigBatchesTransactions, {
+        const response = await useFetchPostClient(apiSvcPigBatchesTransactions, {
           batchId,
           ...payload,
         })
         if (!isSuccessClient(response)) {
-          ;(this.$refs.modalBatchTx as any).setError(getErrorMessageClient(response))
+          ; (this.$refs.modalBatchTx as IModalRef).setError(getErrorMessageClient(response))
           return
         }
-        ;(this.$refs.modalBatchTx as any).hide()
+        ; (this.$refs.modalBatchTx as IModalRef).hide()
         this.sAlertState?.show(defaultAlertSuccess('บันทึกเหตุการณ์สำเร็จ'))
         await this.reloadData()
       } catch (e: any) {
-        ;(this.$refs.modalBatchTx as any).setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
+        ; (this.$refs.modalBatchTx as IModalRef).setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
       } finally {
         this.sLoadingState?.hide()
       }

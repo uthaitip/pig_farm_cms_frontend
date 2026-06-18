@@ -92,7 +92,7 @@ export default {
 
     async loadMenus() {
       try {
-        const response = await useFetchGetClient(CMS_API.menus.list, {
+        const response = await useFetchGetClient(apiSvcMenus, {
           params: { pagination: { page: 1, limit: 999 }, filter: {}, search: '' },
         })
         this.allMenus = getSuccessDataClient(response)?.list ?? []

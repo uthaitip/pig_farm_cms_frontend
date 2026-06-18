@@ -2,10 +2,8 @@
   <UIBaseModal id="modal-sale-form" title="บันทึกการขาย" width="max-w-2xl" :show-footer="false"
     @on-created="(m: any) => (modal = m)">
     <div>
-      <!-- Sale header -->
       <UIBaseGenerateFormGrid :fields="headerFields" @on-change="onHeaderChange" />
 
-      <!-- Detail lines -->
       <div class="border-t border-gray-200 pt-3 mt-2">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm font-semibold text-appblack">รายการขาย</p>
@@ -23,11 +21,11 @@
                 @click="$emit('remove-line', idx)">ลบ</button>
             </div>
             <UIBaseGenerateFormGrid :fields="lineFields(idx)" @on-change="onLineChange(idx, $event)" />
+            <p v-if="lineErrors[idx]" class="text-xs text-apperror -mt-4 mb-1">{{ lineErrors[idx] }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Summary -->
       <div class="flex justify-end items-center gap-6 pt-2 border-t border-gray-200">
         <div class="text-right">
           <p class="text-xs text-appgray">จำนวนรวม</p>
@@ -55,6 +53,7 @@
 
 <script lang="ts">
 import type { Modal } from 'flowbite'
+import * as zod from 'zod'
 
 export default {
   props: {
@@ -66,7 +65,18 @@ export default {
   emits: ['update:values', 'add-line', 'remove-line', 'on-submit'],
 
   data() {
-    return { modal: null as Modal | null }
+    return {
+      modal: null as Modal | null,
+      lineErrors: [] as string[],
+    }
+  },
+
+  watch: {
+    'values.details'(newDetails: any[]) {
+      if (this.lineErrors.length > newDetails.length) {
+        this.lineErrors = this.lineErrors.slice(0, newDetails.length)
+      }
+    },
   },
 
   computed: {
@@ -74,7 +84,7 @@ export default {
       return this.values.details.reduce((s, l) => s + (Number(l.quantity) || 0), 0)
     },
     totalAmount(): number {
-      return this.values.details.reduce((s, l) => s + (Number(l.amount) || 0), 0)
+      return this.values.details.reduce((s, l) => s + (formatNumberByString(String(l.amount)) || 0), 0)
     },
 
     customerOptions(): any[] {
@@ -122,6 +132,7 @@ export default {
 
     lineFields(idx: number): any[] {
       const line = this.values.details[idx]
+      const batch = (this.batches as any[]).find(b => b._id === line.batchId)
       return [
         {
           key: 'batchId', label: 'รุ่นหมู', type: 'dropdown', flex: 'full', required: true, useForm: false,
@@ -129,8 +140,11 @@ export default {
           children: this.batchOptions(idx),
         },
         {
-          key: 'quantity', label: 'จำนวน (ตัว)', type: 'number', flex: 'half', required: true, useForm: false,
+          key: 'quantity',
+          label: batch ? `จำนวน (ตัว) — เหลือ ${batch.currentQuantity} ตัว` : 'จำนวน (ตัว)',
+          type: 'number', flex: 'half', required: true, useForm: false,
           placeholder: '0', value: line.quantity ?? '',
+          min: 1, max: batch?.currentQuantity ?? undefined,
         },
         {
           key: 'averageWeight', label: 'น้ำหนักเฉลี่ย (กก.)', type: 'number', flex: 'half', useForm: false,
@@ -145,8 +159,9 @@ export default {
           placeholder: '0', value: line.pricePerKg ?? '',
         },
         {
-          key: 'amount', label: 'ยอดเงิน (บาท)', type: 'number', flex: 'full', required: true, useForm: false,
-          placeholder: '0', value: line.amount ?? '',
+          key: 'amount', label: 'ยอดเงิน (บาท)', type: 'text', flex: 'full', required: true, useForm: false,
+          placeholder: '0',
+          value: line.amount !== '' && line.amount != null ? formatNumberComma(line.amount) : '',
         },
       ]
     },
@@ -157,6 +172,25 @@ export default {
 
     onLineChange(idx: number, { keyChange, ...rest }: any) {
       const line = { ...this.values.details[idx], ...rest }
+      if ('amount' in rest) {
+        line.amount = formatNumberRemoveComma(line.amount)
+      }
+
+      // validate quantity against batch currentQuantity
+      if (['quantity', 'batchId'].includes(keyChange)) {
+        const batch = (this.batches as any[]).find(b => b._id === line.batchId)
+        const errors = [...this.lineErrors]
+        if (batch && line.quantity !== '' && line.quantity != null) {
+          const result = zod.number()
+            .min(1, 'กรุณาระบุจำนวน')
+            .max(batch.currentQuantity, `จำนวนต้องไม่เกิน ${batch.currentQuantity} ตัว`)
+            .safeParse(Number(line.quantity))
+          errors[idx] = result.success ? '' : result.error.issues[0].message
+        } else {
+          errors[idx] = ''
+        }
+        this.lineErrors = errors
+      }
 
       // auto-calc totalWeight
       if (['quantity', 'averageWeight'].includes(keyChange)) {
@@ -168,6 +202,8 @@ export default {
       if (['totalWeight', 'pricePerKg', 'quantity', 'averageWeight'].includes(keyChange)) {
         if (line.totalWeight && line.pricePerKg) {
           line.amount = Number(line.totalWeight) * Number(line.pricePerKg)
+        } else if (line.quantity && line.pricePerKg && !line.totalWeight && !line.averageWeight) {
+          line.amount = Number(line.quantity) * Number(line.pricePerKg)
         }
       }
 

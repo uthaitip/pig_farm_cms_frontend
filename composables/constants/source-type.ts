@@ -9,5 +9,11 @@ const SourceTypeMsg: Record<SourceType | any, String> = {
     [SourceType.BORN]: 'เกิดในฟาร์ม'
 }
 
-export { SourceType, SourceTypeMsg }
+
+const SourceTypePigColor: Record<string, string> = {
+    [SourceType.PURCHASED]: 'bg-purple-100 text-purple-600',
+    [SourceType.BORN]: 'bg-blue-100 text-blue-600',
+}
+
+export { SourceType, SourceTypeMsg, SourceTypePigColor }
 

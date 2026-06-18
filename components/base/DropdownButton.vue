@@ -74,15 +74,9 @@ export default {
         offsetDistance: 10,
         delay: 300,
         ignoreClickOutsideClass: true,
-        onHide: () => {
-          // console.log("dropdown has been hidden");
-        },
-        onShow: () => {
-          // console.log("dropdown has been shown");
-        },
-        onToggle: () => {
-          // console.log("dropdown has been toggled");
-        },
+        onHide: () => {},
+        onShow: () => {},
+        onToggle: () => {},
       };
 
       // set the element that trigger the dropdown menu on click

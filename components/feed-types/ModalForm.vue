@@ -17,15 +17,21 @@
 
 <script lang="ts">
 import type { Modal } from 'flowbite'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 
 const EMPTY_FORM = { feedName: '', category: 'FEED', unit: '', minimumQuantity: 0, description: '' }
+
+const validationSchema = toTypedSchema(zod.object({
+  feedName: zod.string({ required_error: 'กรุณาระบุชื่อ' }).min(1, 'กรุณาระบุชื่อ'),
+}))
 
 export default {
   emits: ['onSubmit'],
 
   setup() {
-    const { validate, resetForm } = useForm()
-    return { validate, resetForm }
+    const { validate, resetForm, setValues } = useForm({ validationSchema, initialValues: { ...EMPTY_FORM } })
+    return { validate, resetForm, setValues }
   },
 
   data() {
@@ -50,7 +56,7 @@ export default {
           ],
         },
         {
-          key: 'feedName', label: 'ชื่อ', type: 'text', flex: 'full', required: true, useForm: false,
+          key: 'feedName', label: 'ชื่อ', type: 'text', flex: 'full', required: true, useForm: true,
           value: this.formValues.feedName ?? '',
           placeholder: 'เช่น อาหารหมูขุน, ยาปฏิชีวนะ',
         },
@@ -60,12 +66,12 @@ export default {
           placeholder: 'เช่น กระสอบ, กก., ขวด',
         },
         {
-          key: 'minimumQuantity', label: 'จำนวน', type: 'number', flex: 'full', min: 0, useForm: false,
+          key: 'minimumQuantity', label: 'สต็อกขั้นต่ำ', type: 'number', flex: 'full', min: 0, useForm: false,
           value: this.formValues.minimumQuantity ?? 0,
           placeholder: '0',
         },
         {
-          key: 'description', label: 'รายละเอียด', type: 'text', flex: 'full', useForm: false,
+          key: 'description', label: 'รายละเอียด', type: 'textarea', flex: 'full', useForm: false,
           value: this.formValues.description ?? '',
           placeholder: 'รายละเอียดเพิ่มเติม (ถ้ามี)',
         },
@@ -80,8 +86,8 @@ export default {
       this.formValues = item
         ? { feedName: item.feedName, category: item.category ?? 'FEED', unit: item.unit ?? '', minimumQuantity: item.minimumQuantity ?? 0, description: item.description ?? '' }
         : { ...EMPTY_FORM }
-      const currentValues = Object.fromEntries(this.fields.map((f: any) => [f.key, f.value]))
-      this.resetForm({ values: currentValues })
+      this.resetForm({ values: this.formValues })
+      this.setValues(this.formValues)
       this.modal?.show()
     },
 

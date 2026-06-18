@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="flex items-start justify-between pb-4 border-b-[3px] border-b-primary rounded-t">
       <div>
         <button class="text-xs text-appgray hover:underline mb-1 flex items-center gap-1" @click="$router.back()">
@@ -14,8 +13,8 @@
           <span v-if="sale?.customerId?.customerName"> · {{ sale.customerId.customerName }}</span>
         </p>
         <div class="mt-1">
-          <span v-if="sale?.status" :class="statusClass(sale.status)" class="text-xs px-2 py-0.5 rounded-full font-medium">
-            {{ statusLabel(sale.status) }}
+          <span v-if="sale?.status" :class="StatusSaleColor[sale.status]" class="text-xs px-2 py-0.5 rounded-full font-medium">
+            {{ StatusSaleMsg[sale.status] ?? sale.status }}
           </span>
         </div>
       </div>
@@ -27,10 +26,8 @@
       </div>
     </div>
 
-    <!-- Note -->
     <p v-if="sale?.note" class="text-sm text-appgray pt-3">หมายเหตุ: {{ sale.note }}</p>
 
-    <!-- Detail table -->
     <div class="pt-4">
       <p class="text-sm font-semibold text-appblack mb-3">รายการขาย</p>
       <div v-if="!sale?.details?.length" class="text-sm text-appgray text-center py-8">ไม่มีรายการ</div>
@@ -98,26 +95,13 @@ export default {
     async loadSale() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffSalesById(this.saleId))
+        const response = await useFetchGetClient(apiSvcSalesById(this.saleId))
         this.sale = getSuccessDataClient(response) ?? null
       } finally {
         this.sLoadingState?.hide()
       }
     },
 
-    statusLabel(status: string) {
-      const map: Record<string, string> = { DRAFT: 'แบบร่าง', COMPLETED: 'เสร็จสิ้น', CANCELLED: 'ยกเลิก' }
-      return map[status] ?? status
-    },
-
-    statusClass(status: string) {
-      const map: Record<string, string> = {
-        DRAFT: 'bg-yellow-100 text-yellow-700',
-        COMPLETED: 'bg-green-100 text-green-700',
-        CANCELLED: 'bg-red-100 text-red-700',
-      }
-      return map[status] ?? 'bg-gray-100 text-gray-600'
-    },
   },
 }
 </script>

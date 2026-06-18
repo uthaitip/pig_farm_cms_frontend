@@ -11,3 +11,9 @@ export interface IModal {
   show: Function;
   hide: Function;
 }
+
+export interface IModalRef {
+  show: (row?: any) => void
+  hide: () => void
+  setError: (msg: string) => void
+}

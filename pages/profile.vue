@@ -12,7 +12,7 @@
         <p class="text-lg font-bold text-appblack">{{ profile?.fullName || '-' }}</p>
         <p class="text-sm text-appgray">{{ profile?.email }}</p>
         <span class="mt-1 inline-block px-2 py-0.5 bg-primary-50 text-primary-600 text-xs rounded-full font-medium">
-          {{ profile?.includeRole?.name ?? profile?.role?.name ?? '-' }}
+          {{ profile?.roleId?.name ?? profile?.role?.name ?? '-' }}
         </span>
       </div>
     </div>
@@ -129,7 +129,7 @@ export default {
 
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPutClient(apiBffUsersById(this.profile._id), {
+        const response = await useFetchPutClient(apiSvcUsersById(this.profile._id), {
           firstName: this.profileForm.firstName.trim(),
           lastName:  this.profileForm.lastName.trim(),
           email:     this.profileForm.email.trim()  || undefined,
@@ -137,7 +137,7 @@ export default {
         })
         if (!isSuccessClient(response)) { this.profileError = getErrorMessageClient(response); return }
 
-        const meResponse = await useFetchGetClient(apiBffMe)
+        const meResponse = await useFetchGetClient(apiSvcMe)
         const newProfile = getSuccessDataClient(meResponse)
         if (newProfile) useProfile().value = newProfile
 
@@ -158,7 +158,7 @@ export default {
 
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPatchClient(apiBffUsersPasswordById(this.profile._id), {
+        const response = await useFetchPatchClient(apiSvcUsersPasswordById(this.profile._id), {
           oldPassword: this.pwForm.oldPassword,
           password:    this.pwForm.password,
         })

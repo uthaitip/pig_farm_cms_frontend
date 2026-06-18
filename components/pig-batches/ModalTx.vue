@@ -1,17 +1,21 @@
 <template>
-  <UIBaseModal id="modal-pig-batch-tx" title="บันทึกเหตุการณ์" width="max-w-lg" :show-footer="false"
+  <UIBaseModal id="modal-pig-batch-tx" title="บันทึกกิจกรรม" width="max-w-lg" :show-footer="false"
     @on-created="(m: any) => (modal = m)">
     <div>
-      <div v-if="batch" class="mb-4 px-3 py-2 bg-primary-50 rounded-lg flex gap-6">
-        <div class="flex-1">
+      <div v-if="batch" class="mb-4 px-3 py-2 bg-primary-50 rounded-lg grid grid-cols-2 gap-x-6 gap-y-2">
+        <div>
           <p class="text-xs text-appgray">รหัสรุ่น</p>
           <p class="text-sm font-semibold text-primary">{{ batch.batchCode }}</p>
         </div>
-        <div class="flex-1">
+        <div>
           <p class="text-xs text-appgray">ชื่อรุ่น</p>
           <p class="text-sm font-semibold text-primary">{{ batch.batchName ?? '-' }}</p>
         </div>
-        <div class="flex-1">
+        <div>
+          <p class="text-xs text-appgray">โรงเรือน</p>
+          <p class="text-sm font-semibold text-primary">{{ batch.penId?.houseId?.houseName ?? '-' }}</p>
+        </div>
+        <div>
           <p class="text-xs text-appgray">จำนวนปัจจุบัน</p>
           <p class="text-sm font-semibold text-primary">{{ batch.currentQuantity }} ตัว</p>
         </div>
@@ -30,51 +34,49 @@
 </template>
 
 <script lang="ts">
-import type { Modal } from 'flowbite'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 
 const EMPTY_FORM = {
-  transactionType: '', quantity: '', transactionDate: '',
-  fromPenId: '', toPenId: '', remark: '',
+  transactionType: '', quantity: '', transactionDate: '', remark: '',
 }
+
+const validationSchema = toTypedSchema(zod.object({
+  transactionType: zod.string({ required_error: 'กรุณาเลือกประเภทกิจกรรม' }).min(1, 'กรุณาเลือกประเภทกิจกรรม'),
+  quantity:        zod.coerce.string({ invalid_type_error: 'กรุณาระบุจำนวน' }).min(1, 'กรุณาระบุจำนวน'),
+  transactionDate: zod.string({ required_error: 'กรุณาเลือกวันที่' }).min(1, 'กรุณาเลือกวันที่'),
+  remark:          zod.string().optional(),
+}))
 
 export default {
   emits: ['onSubmit'],
 
   setup() {
-    const { validate, resetForm, values } = useForm({ initialValues: { ...EMPTY_FORM } })
+    const { validate, resetForm, values } = useForm({ validationSchema, initialValues: { ...EMPTY_FORM } })
     return { validate, resetForm, values }
   },
 
   data() {
     return {
-      modal:     null as Modal | null,
-      batch:     null as IPigBatch | null,
+      modal: null as any,
+      batch: null as IPigBatch | null,
       formError: '' as string,
-      pens:      [] as any[],
     }
   },
 
   computed: {
-    penOptions(): any[] {
-      return [
-        { label: '-- กรุณาเลือกคอก --', value: '' },
-        ...this.pens.map((p: any) => ({ label: `${p.penCode} - ${p.penName}`, value: p._id })),
-      ]
-    },
     fields(): any[] {
       const v = this.values as any
       const base: any[] = [
         {
-          key: 'transactionType', label: 'ประเภทเหตุการณ์', type: 'dropdown',
+          key: 'transactionType', label: 'ประเภทกิจกรรม', type: 'dropdown',
           flex: 'full', required: true, useForm: true,
           value: v.transactionType,
           children: [
-            { label: 'รับเข้า (RECEIVE)',      value: 'RECEIVE' },
-            { label: 'ย้ายเข้า (MOVE_IN)',     value: 'MOVE_IN' },
-            { label: 'ย้ายออก (MOVE_OUT)',     value: 'MOVE_OUT' },
-            { label: 'ตาย (DEAD)',             value: 'DEAD' },
-            { label: 'ขาย (SOLD)',             value: 'SOLD' },
-            { label: 'ปรับจำนวน (ADJUST)',    value: 'ADJUST' },
+            { label: 'รับเข้า (RECEIVE)', value: 'RECEIVE' },
+            { label: 'ตาย (DEAD)', value: 'DEAD' },
+            { label: 'ขาย (SOLD)', value: 'SOLD' },
+            { label: 'ปรับจำนวน (ADJUST)', value: 'ADJUST' },
           ],
         },
         {
@@ -88,22 +90,6 @@ export default {
           value: v.transactionDate,
         },
       ]
-      if (['MOVE_IN', 'MOVE_OUT'].includes(v.transactionType)) {
-        base.push(
-          {
-            key: 'fromPenId', label: 'คอกจาก', type: 'dropdown',
-            flex: 'half', useForm: true,
-            value: v.fromPenId,
-            children: this.penOptions,
-          },
-          {
-            key: 'toPenId', label: 'คอกไป', type: 'dropdown',
-            flex: 'half', useForm: true,
-            value: v.toPenId,
-            children: this.penOptions,
-          },
-        )
-      }
       base.push({
         key: 'remark', label: 'หมายเหตุ', type: 'textarea',
         placeholder: 'หมายเหตุ (ถ้ามี)', flex: 'full', useForm: true,
@@ -114,24 +100,14 @@ export default {
   },
 
   methods: {
-    async show(batch: IPigBatch) {
-      this.batch     = batch
+    show(batch: IPigBatch) {
+      this.batch = batch
       this.formError = ''
       this.resetForm({ values: { ...EMPTY_FORM } })
-      await this.loadPens()
       this.modal?.show()
     },
     hide() { this.modal?.hide() },
     setError(msg: string) { this.formError = msg },
-
-    async loadPens() {
-      try {
-        const response = await useFetchGetClient(apiBffPens, {
-          params: { page: 1, limit: 999 },
-        })
-        this.pens = getSuccessDataClient(response)?.list ?? []
-      } catch {}
-    },
 
     async onSubmit() {
       const { valid } = await this.validate()
@@ -142,11 +118,9 @@ export default {
         batchId: this.batch!._id,
         payload: {
           transactionType: v.transactionType,
-          quantity:        Number(v.quantity),
+          quantity: Number(v.quantity),
           transactionDate: v.transactionDate,
-          fromPenId:       v.fromPenId || null,
-          toPenId:         v.toPenId   || null,
-          remark:          v.remark    || null,
+          remark: v.remark || null,
         },
       })
     },

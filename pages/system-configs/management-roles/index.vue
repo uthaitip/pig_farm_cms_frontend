@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">กำหนดสิทธิ์เมนู</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -51,7 +48,6 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modals -->
     <UIManagementRolesAddRoleModal ref="modalAdd" @onSubmit="onHandleAdd" />
     <UIManagementRolesAssignMenusModal ref="modalMenus" @onSave="onHandleSave" />
   </div>
@@ -118,7 +114,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffRoles, {
+        const response = await useFetchGetClient(apiSvcRoles, {
           params: {
             page:   this.currentPage,
             limit:  10,
@@ -154,7 +150,7 @@ export default {
     async onHandleAdd({ payload }: { payload: any }) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPostClient(apiBffRoles, payload)
+        const response = await useFetchPostClient(apiSvcRoles, payload)
         if (!isSuccessClient(response)) {
           ;(this.$refs.modalAdd as any).setError(getErrorMessageClient(response))
           return
@@ -176,7 +172,7 @@ export default {
     async onHandleSave({ roleId, menuIds }: { roleId: string; menuIds: string[] }) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPutClient(apiBffRolesById(roleId), { menuIds })
+        const response = await useFetchPutClient(apiSvcRolesById(roleId), { menuIds })
         if (!isSuccessClient(response)) {
           ;(this.$refs.modalMenus as any).setError(getErrorMessageClient(response))
           return

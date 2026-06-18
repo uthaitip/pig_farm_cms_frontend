@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการคอก</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -33,8 +30,8 @@
         </template>
         <template #status="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="statusClass(data.status)">
-              {{ statusLabel(data.status) }}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="StatusPenColor[data.status]">
+              {{ StatusPenMsg[data.status] ?? data.status }}
             </span>
           </div>
         </template>
@@ -51,7 +48,6 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modal -->
     <UIBaseModal id="modal-sc-pen-form" :title="currentId ? 'แก้ไขคอกหมู' : 'เพิ่มคอกหมู'"
       width="max-w-xl" :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
@@ -161,21 +157,9 @@ export default {
   },
 
   methods: {
-    statusLabel(status: string): string {
-      const map: Record<string, string> = { ACTIVE: 'ใช้งาน', FULL: 'เต็ม', MAINTENANCE: 'ซ่อมบำรุง' }
-      return map[status] ?? status
-    },
-
-    statusClass(status: string): string {
-      if (status === 'ACTIVE')      return 'bg-green-100 text-appsuccess'
-      if (status === 'FULL')        return 'bg-yellow-100 text-yellow-700'
-      if (status === 'MAINTENANCE') return 'bg-gray-100 text-appgray'
-      return 'bg-gray-100 text-appgray'
-    },
-
     async loadHouses() {
       try {
-        const response = await useFetchGetClient(apiBffHouses, {
+        const response = await useFetchGetClient(apiSvcHouses, {
           params: { page: 1, limit: 999, filter: JSON.stringify({ status: 'ACTIVE' }) },
         })
         const list = getSuccessDataClient(response)?.list ?? []
@@ -189,7 +173,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPens, {
+        const response = await useFetchGetClient(apiSvcPens, {
           params: {
             page:   this.currentPage,
             limit:  10,
@@ -247,7 +231,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffPensById(id))
+            await useFetchDeleteClient(apiSvcPensById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -271,8 +255,8 @@ export default {
           ...(this.currentId ? { status: v.status } : {}),
         }
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffPens, payload)
-          : await useFetchPutClient(apiBffPensById(this.currentId), payload)
+          ? await useFetchPostClient(apiSvcPens, payload)
+          : await useFetchPutClient(apiSvcPensById(this.currentId), payload)
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }
         this.modalForm?.hide()
         this.sAlertState?.show(defaultAlertSuccess(this.currentId ? 'แก้ไขคอกสำเร็จ' : 'เพิ่มคอกสำเร็จ'))

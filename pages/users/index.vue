@@ -181,7 +181,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffUsers, { params: { page: 1, limit: 999 } })
+        const response = await useFetchGetClient(apiSvcUsers, { params: { page: 1, limit: 999 } })
         const data = getSuccessDataClient(response)
         this.items = data?.list ?? data ?? []
       } finally {
@@ -190,7 +190,7 @@ export default {
     },
 
     async loadRoles() {
-      const response = await useFetchGetClient(apiBffRoles, { params: { page: 1, limit: 999 } }).catch(() => null)
+      const response = await useFetchGetClient(apiSvcRoles, { params: { page: 1, limit: 999 } }).catch(() => null)
       const data = getSuccessDataClient(response)
       this.roles = data?.list ?? data ?? []
     },
@@ -223,7 +223,7 @@ export default {
       this.sAlertState?.show(defaultAlertConfirm('ยืนยันการลบผู้ใช้?', async () => {
         this.sLoadingState?.show()
         try {
-          await useFetchDeleteClient(apiBffUsersById(id))
+          await useFetchDeleteClient(apiSvcUsersById(id))
           await this.reloadData()
         } finally {
           this.sLoadingState?.hide()
@@ -236,14 +236,14 @@ export default {
       this.sLoadingState?.show()
       try {
         const response = this.formMode === 'add'
-          ? await useFetchPostClient(apiBffUsers, {
+          ? await useFetchPostClient(apiSvcUsers, {
               fullName: values.fullName,
               email:    values.email,
               password: values.password,
               phone:    values.phone  || undefined,
               roleId:   values.roleId || undefined,
             })
-          : await useFetchPutClient(apiBffUsersById(this.currentUser._id), {
+          : await useFetchPutClient(apiSvcUsersById(this.currentUser._id), {
               fullName: values.fullName,
               email:    values.email,
               phone:    values.phone  || undefined,

@@ -1,11 +1,9 @@
 <template>
     <div>
-        <!-- Header -->
         <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
             <h3 class="pt-2 text-xl font-semibold text-primary">ประเภทคอกหมู</h3>
         </div>
 
-        <!-- Search & Filter -->
         <div class="flex items-center gap-3 pt-4 pb-2">
             <div class="w-64">
                 <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -22,7 +20,6 @@
             </div>
         </div>
 
-        <!-- Table -->
         <div class="pt-2">
             <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
                 @onChangePage="onChangePage">
@@ -47,7 +44,6 @@
             </UIBaseTable>
         </div>
 
-        <!-- Modal -->
         <UIHouseTypesModalForm ref="modalForm" @onSubmit="onHandleSubmit" />
     </div>
 </template>
@@ -111,7 +107,7 @@ export default {
         async reloadData() {
             this.sLoadingState?.show()
             try {
-                const response = await useFetchGetClient(apiBffHouseTypes, {
+                const response = await useFetchGetClient(apiSvcHouseTypes, {
                     params: {
                         page: this.currentPage,
                         limit: 10,
@@ -154,7 +150,7 @@ export default {
                 async () => {
                     this.sLoadingState?.show()
                     try {
-                        await useFetchDeleteClient(apiBffHouseTypesById(id))
+                        await useFetchDeleteClient(apiSvcHouseTypesById(id))
                         await this.reloadData()
                     } finally {
                         this.sLoadingState?.hide()
@@ -167,8 +163,8 @@ export default {
             this.sLoadingState?.show()
             try {
                 const response = !editId
-                    ? await useFetchPostClient(apiBffHouseTypes, payload)
-                    : await useFetchPutClient(apiBffHouseTypesById(editId), payload)
+                    ? await useFetchPostClient(apiSvcHouseTypes, payload)
+                    : await useFetchPutClient(apiSvcHouseTypesById(editId), payload)
                 if (!isSuccessClient(response)) {
                     ; (this.$refs.modalForm as any).setError(getErrorMessageClient(response))
                     return

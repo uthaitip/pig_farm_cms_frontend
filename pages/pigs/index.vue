@@ -152,7 +152,7 @@ export default {
     async load() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPigs, {
+        const response = await useFetchGetClient(apiSvcPigs, {
           params: { page: this.currentPage, limit: 10, search: this.searchText.trim() },
         })
         this.items = getSuccessDataClient(response) ?? {}
@@ -188,7 +188,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffPigsById(id))
+            await useFetchDeleteClient(apiSvcPigsById(id))
             await this.load()
           } finally {
             this.sLoadingState?.hide()
@@ -212,8 +212,8 @@ export default {
           ...(this.currentId ? { status: v.status } : {}),
         }
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffPigs, payload)
-          : await useFetchPutClient(apiBffPigsById(this.currentId), payload)
+          ? await useFetchPostClient(apiSvcPigs, payload)
+          : await useFetchPutClient(apiSvcPigsById(this.currentId), payload)
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }
         this.modalForm?.hide()
         this.sAlertState?.show(defaultAlertSuccess(this.currentId ? 'แก้ไขข้อมูลหมูสำเร็จ' : 'เพิ่มหมูสำเร็จ'))

@@ -83,7 +83,7 @@ export default {
     async loadData(page: number = 1) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffFeedStocksTransactions(this.stockId), {
+        const response = await useFetchGetClient(apiSvcFeedStocksTransactions(this.stockId), {
           params: { page, limit: 20 },
         })
         const data = getSuccessDataClient(response)

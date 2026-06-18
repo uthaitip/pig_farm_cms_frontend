@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการเมนู</h3>
     </div>
 
-    <!-- Actions -->
     <div class="flex justify-end pt-4 pb-2">
       <button class="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg"
         @click="onClickAdd(null)">
@@ -13,7 +11,6 @@
       </button>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-list="items" :enabled-children="true" :show-running="true">
         <template #status="{ data }">
@@ -58,13 +55,11 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modal: Add/Edit -->
     <UIBaseModal id="modal-menu-form" :title="currentId ? 'แก้ไขเมนู' : 'เพิ่มเมนู'"
       width="max-w-md" :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
         <UIBaseGenerateFormGrid :fields="topFields" />
 
-        <!-- Icon picker -->
         <div class="mb-3">
           <label class="text-xs text-appgray mb-1 block">Icon</label>
           <button type="button"
@@ -90,7 +85,6 @@
       </div>
     </UIBaseModal>
 
-    <!-- Modal: Icon Picker -->
     <UIBaseModal id="modal-icon-picker" title="เลือก Icon" width="max-w-2xl" :show-footer="false"
       @on-created="(m: any) => (modalIconPicker = m)">
       <div>
@@ -218,7 +212,7 @@ export default {
     async loadMenus() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(CMS_API.menus.list, {
+        const response = await useFetchGetClient(apiSvcMenus, {
           params: { page: 1, limit: 999 },
         })
         const flat: any[] = getSuccessDataClient(response)?.list ?? []
@@ -280,7 +274,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(CMS_API.menus.byId(id))
+            await useFetchDeleteClient(apiSvcMenusById(id))
             await this.loadMenus()
           } finally {
             this.sLoadingState?.hide()
@@ -306,8 +300,8 @@ export default {
           ...(this.currentId ? { status: v.status } : {}),
         }
         const response = !this.currentId
-          ? await useFetchPostClient(CMS_API.menus.list, payload)
-          : await useFetchPutClient(CMS_API.menus.byId(this.currentId), payload)
+          ? await useFetchPostClient(apiSvcMenus, payload)
+          : await useFetchPutClient(apiSvcMenusById(this.currentId), payload)
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }
         this.modalForm?.hide()
         this.sAlertState?.show(defaultAlertSuccess(this.currentId ? 'แก้ไขเมนูสำเร็จ' : 'เพิ่มเมนูสำเร็จ'))

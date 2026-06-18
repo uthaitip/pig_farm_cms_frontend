@@ -1,8 +1,19 @@
+export interface IPigBatchPen {
+  _id: string
+  penCode: string
+  penName: string
+  houseId: {
+    _id: string
+    houseCode: string
+    houseName: string
+  }
+}
+
 export interface IPigBatch {
   _id: string
   batchCode: string
   batchName: string | null
-  penId: string
+  penId: IPigBatchPen
   sourceType: 'BORN' | 'PURCHASED'
   receivedDate: string
   initialQuantity: number

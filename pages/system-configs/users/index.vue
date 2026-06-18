@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการผู้ใช้งาน</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -42,8 +39,8 @@
         </template>
         <template #status="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="statusClass(data.status)">
-              {{ statusLabel(data.status) }}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="StatusUserColor[data.status]">
+              {{ StatusUserMsg[data.status] ?? data.status }}
             </span>
           </div>
         </template>
@@ -60,7 +57,6 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modal -->
     <UIBaseModal id="modal-sc-user-form" :title="currentId ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งาน'"
       width="max-w-2xl" :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
@@ -279,17 +275,9 @@ export default {
       return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
     },
 
-    statusLabel(status: string): string {
-      return status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'
-    },
-
-    statusClass(status: string): string {
-      return status === 'active' ? 'bg-green-100 text-appsuccess' : 'bg-gray-100 text-appgray'
-    },
-
     async loadRoles() {
       try {
-        const response = await useFetchGetClient(apiBffRoles, {
+        const response = await useFetchGetClient(apiSvcRoles, {
           params: { page: 1, limit: 999, filter: JSON.stringify({ status: 'active' }) },
         })
         const list = getSuccessDataClient(response)?.list ?? []
@@ -303,7 +291,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffUsers, {
+        const response = await useFetchGetClient(apiSvcUsers, {
           params: {
             page:   this.currentPage,
             limit:  10,
@@ -372,7 +360,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffUsersById(id))
+            await useFetchDeleteClient(apiSvcUsersById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -398,7 +386,7 @@ export default {
           postalCode:  v.postalCode  || null,
         }
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffUsers, {
+          ? await useFetchPostClient(apiSvcUsers, {
               firstName: v.firstName.trim(),
               lastName:  v.lastName.trim(),
               birthDate: v.birthDate  || null,
@@ -409,7 +397,7 @@ export default {
               startDate: v.startDate  || null,
               ...addressPayload,
             })
-          : await useFetchPutClient(apiBffUsersById(this.currentId), {
+          : await useFetchPutClient(apiSvcUsersById(this.currentId), {
               firstName: v.firstName.trim(),
               lastName:  v.lastName.trim(),
               birthDate: v.birthDate  || null,

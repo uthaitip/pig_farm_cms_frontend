@@ -1,5 +1,3 @@
-import { apiBffMe } from '~/composables/api-bff'
-
 export default defineNuxtRouteMiddleware(async (to) => {
   const token       = useCookie('token')
   const profile     = useProfile()
@@ -11,7 +9,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (token.value && !profile.value) {
     try {
       const config = useRuntimeConfig()
-      const res = await $fetch<any>(`${config.public.apiBff}${apiBffMe}`, {
+      const res = await $fetch<any>(`${config.public.apiCms}${apiSvcAuthMe}`, {
         headers: { Authorization: `Bearer ${token.value}` },
       })
       profile.value = res?.data ?? res

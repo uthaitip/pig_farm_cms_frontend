@@ -59,10 +59,7 @@ export default {
     const sInputField = useField(props?.field?.key, rules, {
       initialValue: props?.field?.value,
     });
-    // let sIMask;
     if (!!props?.field?.maskOption) {
-      // sIMask = useIMask(props.field.maskOption);
-      // console.log(props?.field?.key, " == ", sIMask.el)
     }
 
 

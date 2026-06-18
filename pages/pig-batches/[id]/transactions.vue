@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="flex items-start justify-between pb-4 border-b-[3px] border-b-primary rounded-t">
       <div>
         <button class="text-xs text-appgray hover:underline mb-1 flex items-center gap-1" @click="$router.back()">
@@ -13,10 +12,9 @@
       </div>
     </div>
 
-    <!-- Summary cards -->
     <div v-if="batch" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
       <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
-        <p class="text-xs text-appgray">จำนวนเริ่มต้น</p>
+        <p class="text-xs text-appgray">จำนวนเำเข้า</p>
         <p class="text-2xl font-bold text-appblack">{{ batch.initialQuantity }} <span
             class="text-sm font-normal">ตัว</span></p>
       </div>
@@ -37,12 +35,10 @@
       </div>
     </div>
 
-    <!-- Timeline -->
     <div class="pt-6">
       <p v-if="transactions.length === 0" class="text-sm text-appgray text-center py-10">ไม่มีประวัติ</p>
       <div class="relative border-l-2 border-gray-200 ml-4 space-y-0">
         <div v-for="tx in transactions" :key="tx._id" class="relative pl-6 pb-6">
-          <!-- dot -->
           <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white shadow"
             :class="dotClass(tx.transactionType)"></div>
 
@@ -107,7 +103,7 @@ export default {
     async loadBatch() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPigBatchesById(this.batchId))
+        const response = await useFetchGetClient(apiSvcPigBatchesById(this.batchId))
         this.batch = getSuccessDataClient(response) ?? null
       } finally {
         this.sLoadingState?.hide()
@@ -117,9 +113,7 @@ export default {
     async loadTransactions() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPigBatchesTxById(this.batchId), {
-          params: { page: 1, limit: 999 }
-        })
+        const response = await useFetchGetClient(apiSvcPigBatchesTransactions, { params: { page: 1, limit: 999, filter: JSON.stringify({ batchId: this.batchId }) } })
         const list = getSuccessDataClient(response)?.list ?? []
         this.transactions = list.sort((a: any, b: any) =>
           new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()

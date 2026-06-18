@@ -30,8 +30,8 @@
         </template>
         <template #status="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="statusClass(data.status)">
-              {{ statusLabel(data.status) }}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="StatusPenColor[data.status]">
+              {{ StatusPenMsg[data.status] ?? data.status }}
             </span>
           </div>
         </template>
@@ -48,8 +48,8 @@
       </UIBaseTable>
     </div>
 
-    <UIBaseModal id="modal-pen-form" :title="currentId ? 'แก้ไขคอกหมู' : 'เพิ่มคอกหมู'"
-      width="max-w-xl" :show-footer="false" @on-created="(m: any) => (modalForm = m)">
+    <UIBaseModal id="modal-pen-form" :title="currentId ? 'แก้ไขคอกหมู' : 'เพิ่มคอกหมู'" width="max-w-xl"
+      :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
         <UIBaseGenerateFormGrid :fields="formFields" :hide-fields="currentId ? [] : ['status']" />
         <p v-if="formError" class="text-sm text-apperror mt-1">{{ formError }}</p>
@@ -80,22 +80,22 @@ export default {
 
   data() {
     return {
-      currentId:     '' as string,
-      formError:     '' as string,
-      modalForm:     null as Modal | null,
-      items:         {} as IPagination<any>,
-      currentPage:   1,
-      searchText:    '' as string,
-      filterStatus:  '' as string,
+      currentId: '' as string,
+      formError: '' as string,
+      modalForm: null as Modal | null,
+      items: {} as IPagination<any>,
+      currentPage: 1,
+      searchText: '' as string,
+      filterStatus: '' as string,
       debounceTimer: null as ReturnType<typeof setTimeout> | null,
-      houseItems:    [] as any[],
+      houseItems: [] as any[],
       tableOptions: [
-        { field: 'penCode',  label: 'รหัสคอก', headerAlign: 'text-left',   dataAlign: 'text-left font-mono text-sm', width: 'w-28' },
-        { field: 'penName',  label: 'ชื่อคอก',  headerAlign: 'text-left',   dataAlign: 'text-left' },
-        { field: 'houseId',  label: 'โรงเรือน', headerAlign: 'text-left',   dataAlign: 'text-left',   width: 'w-36' },
-        { field: 'capacity', label: 'ความจุ',   headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-24' },
-        { field: 'status',   label: 'สถานะ',    headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
-        { field: 'action',   label: 'จัดการ',   headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-24' },
+        { field: 'penCode', label: 'รหัสคอก', headerAlign: 'text-left', dataAlign: 'text-left font-mono text-sm', width: 'w-28' },
+        { field: 'penName', label: 'ชื่อคอก', headerAlign: 'text-left', dataAlign: 'text-left' },
+        { field: 'houseId', label: 'โรงเรือน', headerAlign: 'text-left', dataAlign: 'text-left', width: 'w-36' },
+        { field: 'capacity', label: 'ความจุ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-24' },
+        { field: 'status', label: 'สถานะ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
+        { field: 'action', label: 'จัดการ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-24' },
       ] as any[],
     }
   },
@@ -113,9 +113,9 @@ export default {
         key: 'filterStatus', label: '', type: 'dropdown', useForm: false,
         value: this.filterStatus,
         children: [
-          { label: 'ทุกสถานะ',   value: '' },
-          { label: 'ใช้งาน',     value: 'ACTIVE' },
-          { label: 'เต็ม',       value: 'FULL' },
+          { label: 'ทุกสถานะ', value: '' },
+          { label: 'ใช้งาน', value: 'ACTIVE' },
+          { label: 'เต็ม', value: 'FULL' },
           { label: 'ซ่อมบำรุง', value: 'MAINTENANCE' },
         ],
       }
@@ -143,8 +143,8 @@ export default {
           key: 'status', label: 'สถานะ', type: 'dropdown', flex: 'full', useForm: true,
           value: v.status,
           children: [
-            { label: 'ใช้งาน',     value: 'ACTIVE' },
-            { label: 'เต็ม',       value: 'FULL' },
+            { label: 'ใช้งาน', value: 'ACTIVE' },
+            { label: 'เต็ม', value: 'FULL' },
             { label: 'ซ่อมบำรุง', value: 'MAINTENANCE' },
           ],
         },
@@ -155,20 +155,9 @@ export default {
   mounted() { this.reloadData() },
 
   methods: {
-    statusLabel(status: string) {
-      const map: Record<string, string> = { ACTIVE: 'ใช้งาน', FULL: 'เต็ม', MAINTENANCE: 'ซ่อมบำรุง' }
-      return map[status] ?? status
-    },
-    statusClass(status: string) {
-      if (status === 'ACTIVE')      return 'bg-green-100 text-appsuccess'
-      if (status === 'FULL')        return 'bg-yellow-100 text-yellow-700'
-      if (status === 'MAINTENANCE') return 'bg-gray-100 text-appgray'
-      return 'bg-gray-100 text-appgray'
-    },
-
     async loadHouses() {
       try {
-        const response = await useFetchGetClient(apiBffHouses, {
+        const response = await useFetchGetClient(apiSvcHouses, {
           params: { page: 1, limit: 999, filter: JSON.stringify({ status: 'ACTIVE' }) },
         })
         const list = getSuccessDataClient(response)?.list ?? []
@@ -176,16 +165,16 @@ export default {
           { label: 'กรุณาเลือกโรงเรือน', value: '' },
           ...list.map((h: any) => ({ label: `${h.houseCode} - ${h.houseName}`, value: h._id })),
         ]
-      } catch {}
+      } catch { }
     },
 
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffPens, {
+        const response = await useFetchGetClient(apiSvcPens, {
           params: {
-            page:   this.currentPage,
-            limit:  10,
+            page: this.currentPage,
+            limit: 10,
             search: this.searchText.trim(),
             filter: this.filterStatus ? JSON.stringify({ status: this.filterStatus }) : undefined,
           },
@@ -224,10 +213,10 @@ export default {
       this.formError = ''
       this.resetForm({
         values: {
-          penName:  row.penName  ?? '',
-          houseId:  row.houseId?._id ?? row.houseId ?? '',
+          penName: row.penName ?? '',
+          houseId: row.houseId?._id ?? row.houseId ?? '',
           capacity: row.capacity != null ? String(row.capacity) : '',
-          status:   row.status   ?? 'ACTIVE',
+          status: row.status ?? 'ACTIVE',
         },
       })
       await this.loadHouses()
@@ -240,7 +229,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffPensById(id))
+            await useFetchDeleteClient(apiSvcPensById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -258,14 +247,14 @@ export default {
       this.sLoadingState?.show()
       try {
         const payload = {
-          penName:  v.penName.trim(),
-          houseId:  v.houseId,
+          penName: v.penName.trim(),
+          houseId: v.houseId,
           capacity: Number(v.capacity),
           ...(this.currentId ? { status: v.status } : {}),
         }
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffPens, payload)
-          : await useFetchPutClient(apiBffPensById(this.currentId), payload)
+          ? await useFetchPostClient(apiSvcPens, payload)
+          : await useFetchPutClient(apiSvcPensById(this.currentId), payload)
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }
         this.modalForm?.hide()
         this.sAlertState?.show(defaultAlertSuccess(this.currentId ? 'แก้ไขคอกสำเร็จ' : 'เพิ่มคอกสำเร็จ'))

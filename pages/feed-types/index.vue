@@ -77,7 +77,7 @@ export default {
     async reloadData(page: number = 1) {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffFeedTypes, {
+        const response = await useFetchGetClient(apiSvcFeedTypes, {
           params: { page, limit: 10, search: this.searchText.trim() }
         })
         this.items = getSuccessDataClient(response) ?? {}
@@ -108,7 +108,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffFeedTypesById(id))
+            await useFetchDeleteClient(apiSvcFeedTypesById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -120,18 +120,15 @@ export default {
     async handleSubmit({ editId, payload }: { editId: string; payload: any }) {
       this.sLoadingState?.show()
       try {
-        if (editId) {
-          const response = await useFetchPutClient(apiBffFeedTypesById(editId), payload)
-          if (!isSuccessClient(response)) { (this.$refs.modalForm as any)?.setError(getErrorMessageClient(response)); return }
-        } else {
-          const response = await useFetchPostClient(apiBffFeedTypes, payload)
-          if (!isSuccessClient(response)) { (this.$refs.modalForm as any)?.setError(getErrorMessageClient(response)); return }
-        }
+        const response = editId
+          ? await useFetchPutClient(apiSvcFeedTypesById(editId), payload)
+          : await useFetchPostClient(apiSvcFeedTypes, payload)
+        if (!isSuccessClient(response)) { (this.$refs.modalForm as any)?.setError(getErrorMessageClient(response)); return }
         ;(this.$refs.modalForm as any)?.hide()
         this.sAlertState?.show(defaultAlertSuccess(editId ? 'แก้ไขประเภทสำเร็จ' : 'เพิ่มประเภทสำเร็จ'))
         await this.reloadData()
       } catch (e: any) {
-        ; (this.$refs.modalForm as any)?.setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
+        ;(this.$refs.modalForm as any)?.setError(e?.data?.message ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่')
       } finally {
         this.sLoadingState?.hide()
       }

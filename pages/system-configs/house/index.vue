@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการโรงเรือน</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -49,7 +46,6 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modal -->
     <UIBaseModal id="modal-house-form" :title="currentId ? 'แก้ไขโรงเรือน' : 'เพิ่มโรงเรือน'" width="max-w-2xl"
       :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
@@ -158,7 +154,7 @@ export default {
   methods: {
     async loadHouseTypes() {
       try {
-        const response = await useFetchGetClient(apiBffHouseTypes, {
+        const response = await useFetchGetClient(apiSvcHouseTypes, {
           params: { page: 1, limit: 999, filter: JSON.stringify({ status: 'active' }) },
         })
         const list = getSuccessDataClient(response)?.list ?? []
@@ -172,7 +168,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffHouses, {
+        const response = await useFetchGetClient(apiSvcHouses, {
           params: {
             page: this.currentPage,
             limit: 10,
@@ -230,7 +226,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffHousesById(id))
+            await useFetchDeleteClient(apiSvcHousesById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -254,8 +250,8 @@ export default {
           ...(this.currentId ? { status: v.status } : { status: 'ACTIVE' }),
         }
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffHouses, payload)
-          : await useFetchPutClient(apiBffHousesById(this.currentId), payload)
+          ? await useFetchPostClient(apiSvcHouses, payload)
+          : await useFetchPutClient(apiSvcHousesById(this.currentId), payload)
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }
         this.modalForm?.hide()
         this.sAlertState?.show(defaultAlertSuccess(this.currentId ? 'แก้ไขโรงเรือนสำเร็จ' : 'เพิ่มโรงเรือนสำเร็จ'))

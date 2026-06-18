@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการสิทธิ์</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -46,7 +43,6 @@
       </UIBaseTable>
     </div>
 
-    <!-- Modal -->
     <UIBaseModal id="modal-sc-role-form" :title="currentId ? 'แก้ไขสิทธิ์' : 'เพิ่มสิทธิ์'"
       width="max-w-lg" :show-footer="false" @on-created="(m: any) => (modalForm = m)">
       <div>
@@ -149,7 +145,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffRoles, {
+        const response = await useFetchGetClient(apiSvcRoles, {
           params: {
             page:   this.currentPage,
             limit:  10,
@@ -204,7 +200,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffRolesById(id))
+            await useFetchDeleteClient(apiSvcRolesById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -222,11 +218,11 @@ export default {
       this.sLoadingState?.show()
       try {
         const response = !this.currentId
-          ? await useFetchPostClient(apiBffRoles, {
+          ? await useFetchPostClient(apiSvcRoles, {
               name:        v.name.trim(),
               description: v.description || null,
             })
-          : await useFetchPutClient(apiBffRolesById(this.currentId), {
+          : await useFetchPutClient(apiSvcRolesById(this.currentId), {
               name:        v.name.trim(),
               description: v.description || null,
               status:      v.status,

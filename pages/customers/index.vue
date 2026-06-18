@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">จัดการลูกค้า</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -21,15 +19,13 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
         <template #status="{ data }">
           <div class="flex justify-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-              :class="data.status === 'ACTIVE' ? 'bg-green-100 text-appsuccess' : 'bg-gray-100 text-appgray'">
-              {{ data.status === 'ACTIVE' ? 'ใช้งาน' : 'ปิดใช้งาน' }}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="StatusCustomerColor[data.status]">
+              {{ StatusCustomerMsg[data.status] }}
             </span>
           </div>
         </template>
@@ -65,7 +61,6 @@ export default {
       tableOptions: [
         { field: 'customerCode', label: 'รหัสลูกค้า', headerAlign: 'text-left', dataAlign: 'text-left font-mono text-sm', width: 'w-32' },
         { field: 'customerName', label: 'ชื่อลูกค้า', headerAlign: 'text-left', dataAlign: 'text-left' },
-        { field: 'contactName', label: 'ผู้ติดต่อ', headerAlign: 'text-left', dataAlign: 'text-left' },
         { field: 'phoneNumber', label: 'เบอร์โทร', headerAlign: 'text-left', dataAlign: 'text-left', width: 'w-36' },
         { field: 'status', label: 'สถานะ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-28' },
         { field: 'action', label: 'จัดการ', headerAlign: 'text-center', dataAlign: 'text-center', width: 'w-24' },
@@ -106,7 +101,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffCustomers, {
+        const response = await useFetchGetClient(apiSvcCustomers, {
           params: {
             page: this.currentPage,
             limit: 10,
@@ -149,7 +144,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffCustomersById(id))
+            await useFetchDeleteClient(apiSvcCustomersById(id))
             await this.reloadData()
           } finally {
             this.sLoadingState?.hide()
@@ -163,9 +158,9 @@ export default {
       try {
         let response: any
         if (!editId) {
-          response = await useFetchPostClient(apiBffCustomers, payload)
+          response = await useFetchPostClient(apiSvcCustomers, payload)
         } else {
-          response = await useFetchPutClient(apiBffCustomersById(editId), payload)
+          response = await useFetchPutClient(apiSvcCustomersById(editId), payload)
         }
         if (!isSuccessClient(response)) {
           (this.$refs.modalForm as any)?.setError(getErrorMessageClient(response))

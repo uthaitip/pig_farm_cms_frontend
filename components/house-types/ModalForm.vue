@@ -16,14 +16,20 @@
 
 <script lang="ts">
 import type { Modal } from 'flowbite'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 
 const EMPTY_FORM = { name: '', note: '', status: 'active' }
+
+const validationSchema = toTypedSchema(zod.object({
+  name: zod.string({ required_error: 'กรุณาระบุชื่อประเภทคอก' }).min(1, 'กรุณาระบุชื่อประเภทคอก'),
+}))
 
 export default {
   emits: ['onSubmit'],
 
   setup() {
-    const { validate, resetForm, values } = useForm({ initialValues: { ...EMPTY_FORM } })
+    const { validate, resetForm, values } = useForm({ validationSchema, initialValues: { ...EMPTY_FORM } })
     return { validate, resetForm, values }
   },
 

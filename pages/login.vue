@@ -4,7 +4,7 @@
       <div class="text-center mb-6">
         <div class="text-5xl mb-2">🐷</div>
         <h2 class="text-2xl font-bold text-primary-500">Pig Farm CMS</h2>
-        <p class="text-xs text-appgray mt-1">เชื่อมต่อ CMS API (8080) และ BFF (3001)</p>
+        <p class="text-xs text-appgray mt-1">ระบบจัดการฟาร์มหมู</p>
       </div>
       <form class="space-y-4" @submit.prevent="onLogin">
         <div class="flex flex-col gap-1">
@@ -28,7 +28,6 @@
 </template>
 
 <script lang="ts">
-import { apiBffMe } from '~/composables/api-bff'
 
 export default {
   setup() {
@@ -51,12 +50,12 @@ export default {
       this.loading = true
       this.error   = ''
       try {
-        const res = await cmsPost<any>(CMS_API.auth.login, this.form)
+        const res = await cmsPost<any>(apiSvcAuthLogin, this.form)
         const data = res?.data ?? res
         if (data?.token) {
           this.token        = data.token
           this.refreshToken = data.refreshToken ?? null
-          const meRes = await $fetch<any>(`${this.config.public.apiBff}${apiBffMe}`, {
+          const meRes = await $fetch<any>(`${this.config.public.apiCms}${apiSvcMe}`, {
             headers: { Authorization: `Bearer ${data.token}` },
           })
           this.profile = meRes?.data ?? meRes

@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <div class="pb-4 border-b-[3px] border-b-primary rounded-t">
       <h3 class="pt-2 text-xl font-semibold text-primary">บันทึกการขาย</h3>
     </div>
 
-    <!-- Search & Filter -->
     <div class="flex items-center gap-3 pt-4 pb-2">
       <div class="w-64">
         <UIBaseInputField :field="searchField" @onChange="onSearchChange" />
@@ -18,7 +16,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="pt-2">
       <UIBaseTable :options="tableOptions" :data-pagination="items ?? {}" :show-running="true"
         @onChangePage="onChangePage">
@@ -32,7 +29,7 @@
           <div class="flex justify-center">{{ data.totalQuantity?.toLocaleString() }} ตัว</div>
         </template>
         <template #totalAmount="{ data }">
-          <div class="flex justify-end  text-appsuccess">{{ data.totalAmount?.toLocaleString() }}</div>
+          <div class="flex justify-end text-appsuccess">{{ data.totalAmount?.toLocaleString() }}</div>
         </template>
         <template #status="{ data }">
           <div class="flex justify-center">
@@ -62,14 +59,8 @@
 </template>
 
 <script lang="ts">
+import * as zod from 'zod'
 
-
-const STATUS_LABEL: Record<string, string> = { DRAFT: 'แบบร่าง', COMPLETED: 'เสร็จสิ้น', CANCELLED: 'ยกเลิก' }
-const STATUS_CLASS: Record<string, string> = {
-  DRAFT: 'bg-yellow-100 text-yellow-600',
-  COMPLETED: 'bg-green-100 text-appsuccess',
-  CANCELLED: 'bg-gray-100 text-appgray',
-}
 
 export default {
   setup() {
@@ -116,19 +107,19 @@ export default {
   },
 
   methods: {
-    statusLabel(status: string) { return STATUS_LABEL[status] ?? status },
-    statusClass(status: string) { return STATUS_CLASS[status] ?? '' },
+    statusLabel(status: string) { return StatusSaleMsg[status] ?? status },
+    statusClass(status: string) { return StatusSaleColor[status] ?? '' },
 
     async loadCustomers() {
-      const response = await useFetchGetClient(apiBffCustomers, {
-        params: { page: 1, limit: 999, filter: { status: 'ACTIVE' } },
+      const response = await useFetchGetClient(apiSvcCustomers, {
+        params: { page: 1, limit: "0", filter: { status: 'ACTIVE' } },
       })
       this.customers = getSuccessDataClient(response)?.list ?? []
     },
 
     async loadBatches() {
-      const response = await useFetchGetClient(apiBffPigBatches, {
-        params: { page: 1, limit: 999, filter: { status: 'ACTIVE' } },
+      const response = await useFetchGetClient(apiSvcPigBatches, {
+        params: { page: 1, limit: "0", filter: { status: 'ACTIVE' } },
       })
       this.batches = getSuccessDataClient(response)?.list ?? []
     },
@@ -136,7 +127,7 @@ export default {
     async reloadData() {
       this.sLoadingState?.show()
       try {
-        const response = await useFetchGetClient(apiBffSales, {
+        const response = await useFetchGetClient(apiSvcSales, {
           params: { page: this.currentPage, limit: 10, search: this.searchText.trim() },
         })
         this.items = getSuccessDataClient(response) ?? {}
@@ -167,7 +158,7 @@ export default {
         async () => {
           this.sLoadingState?.show()
           try {
-            await useFetchDeleteClient(apiBffSalesById(id))
+            await useFetchDeleteClient(apiSvcSalesById(id))
             await Promise.all([this.reloadData(), this.loadBatches()])
           } finally {
             this.sLoadingState?.hide()
@@ -183,6 +174,16 @@ export default {
       for (const [i, l] of this.formValues.details.entries()) {
         if (!l.batchId) { this.formError = `รายการที่ ${i + 1}: กรุณาเลือกรุ่นหมู`; return }
         if (!l.quantity) { this.formError = `รายการที่ ${i + 1}: กรุณาระบุจำนวน`; return }
+        const batch = this.batches.find((b: any) => b._id === l.batchId)
+        if (batch) {
+          const qtyResult = zod.number()
+            .min(1, 'กรุณาระบุจำนวน')
+            .max(batch.currentQuantity, `จำนวนต้องไม่เกิน ${batch.currentQuantity} ตัว`)
+            .safeParse(Number(l.quantity))
+          if (!qtyResult.success) {
+            this.formError = `รายการที่ ${i + 1}: ${qtyResult.error?.issues[0]?.message ?? 'จำนวนไม่ถูกต้อง'}`; return
+          }
+        }
         if (l.amount == null || l.amount === '') { this.formError = `รายการที่ ${i + 1}: กรุณาระบุยอดเงิน`; return }
       }
       const batchIds = this.formValues.details.map(l => l.batchId)
@@ -190,7 +191,7 @@ export default {
 
       this.sLoadingState?.show()
       try {
-        const response = await useFetchPostClient(apiBffSales, {
+        const response = await useFetchPostClient(apiSvcSales, {
           customerId: this.formValues.customerId,
           saleDate: this.formValues.saleDate,
           note: this.formValues.note || null,
@@ -200,7 +201,7 @@ export default {
             averageWeight: l.averageWeight ? Number(l.averageWeight) : undefined,
             totalWeight: l.totalWeight ? Number(l.totalWeight) : undefined,
             pricePerKg: l.pricePerKg ? Number(l.pricePerKg) : undefined,
-            amount: Number(l.amount),
+            amount: formatNumberByString(String(l.amount)),
           })),
         })
         if (!isSuccessClient(response)) { this.formError = getErrorMessageClient(response); return }

@@ -1,6 +1,6 @@
 <template>
-  <UIBaseModal id="modal-pig-batch-form" :title="editId ? 'แก้ไขรุ่นหมู' : 'เพิ่มรุ่นหมู'"
-    width="max-w-xl" :show-footer="false" @on-created="(m: any) => (modal = m)">
+  <UIBaseModal id="modal-pig-batch-form" :title="editId ? 'แก้ไขรุ่นหมู' : 'เพิ่มรุ่นหมู'" width="max-w-xl"
+    :show-footer="false" @on-created="(m: any) => (modal = m)">
     <div>
       <UIBaseGenerateFormGrid :fields="fields" :hide-fields="editId ? [] : ['status']" />
       <p v-if="formError" class="text-sm text-apperror mt-1">{{ formError }}</p>
@@ -16,26 +16,39 @@
 
 <script lang="ts">
 import type { Modal } from 'flowbite'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 
 const EMPTY_FORM = {
   batchName: '', penId: '', sourceType: '', receivedDate: '',
   initialQuantity: '', averageWeight: '', description: '', status: 'ACTIVE',
 }
 
+const validationSchema = toTypedSchema(zod.object({
+  penId: zod.string({ required_error: 'กรุณาเลือกคอก' }).min(1, 'กรุณาเลือกคอก'),
+  sourceType: zod.string({ required_error: 'กรุณาเลือกแหล่งที่มา' }).min(1, 'กรุณาเลือกแหล่งที่มา'),
+  receivedDate: zod.string({ required_error: 'กรุณาระบุวันที่รับเข้า' }).min(1, 'กรุณาระบุวันที่รับเข้า'),
+  initialQuantity: zod.coerce.string({ invalid_type_error: 'กรุณาระบุจำนวน' }).min(1, 'กรุณาระบุจำนวน'),
+  batchName: zod.string({ required_error: 'กรุณาระบุชื่อรุ่น' }).min(1, 'กรุณาระบุชื่อรุ่น'),
+  averageWeight: zod.string().optional(),
+  description: zod.string().optional(),
+  status: zod.string().optional(),
+}))
+
 export default {
   emits: ['onSubmit'],
 
   setup() {
-    const { validate, resetForm, values } = useForm({ initialValues: { ...EMPTY_FORM } })
+    const { validate, resetForm, values } = useForm({ validationSchema, initialValues: { ...EMPTY_FORM } })
     return { validate, resetForm, values }
   },
 
   data() {
     return {
-      modal:     null as Modal | null,
-      editId:    '' as string,
+      modal: null as Modal | null,
+      editId: '' as string,
       formError: '' as string,
-      pens:      [] as any[],
+      pens: [] as any[],
     }
   },
 
@@ -53,6 +66,7 @@ export default {
           key: 'batchName', label: 'ชื่อรุ่น', type: 'text',
           placeholder: 'เช่น หมูรุ่น มิ.ย.69', flex: 'full', useForm: true,
           value: v.batchName,
+          required: true,
         },
         {
           key: 'penId', label: 'คอก', type: 'dropdown',
@@ -75,7 +89,7 @@ export default {
           value: v.receivedDate,
         },
         {
-          key: 'initialQuantity', label: 'จำนวนเริ่มต้น (ตัว)', type: 'number',
+          key: 'initialQuantity', label: 'จำนวนนำเข้า (ตัว)', type: 'number',
           placeholder: '0', flex: 'half', required: true, useForm: true,
           value: v.initialQuantity,
         },
@@ -104,18 +118,18 @@ export default {
 
   methods: {
     async show(item?: any) {
-      this.editId    = item?._id ?? ''
+      this.editId = item?._id ?? ''
       this.formError = ''
       this.resetForm({
         values: item ? {
-          batchName:       item.batchName       ?? '',
-          penId:           item.penId           ?? '',
-          sourceType:      item.sourceType      ?? '',
-          receivedDate:    item.receivedDate     ?? '',
+          batchName: item.batchName ?? '',
+          penId: (typeof item.penId === 'object' ? item.penId?._id : item.penId) ?? '',
+          sourceType: item.sourceType ?? '',
+          receivedDate: item.receivedDate ?? '',
           initialQuantity: item.initialQuantity != null ? String(item.initialQuantity) : '',
-          averageWeight:   item.averageWeight   != null ? String(item.averageWeight)   : '',
-          description:     item.description     ?? '',
-          status:          item.status          ?? 'ACTIVE',
+          averageWeight: item.averageWeight != null ? String(item.averageWeight) : '',
+          description: item.description ?? '',
+          status: item.status ?? 'ACTIVE',
         } : { ...EMPTY_FORM },
       })
       await this.loadPens()
@@ -126,11 +140,9 @@ export default {
 
     async loadPens() {
       try {
-        const response = await useFetchGetClient(apiBffPens, {
-          params: { page: 1, limit: 999, filter: JSON.stringify({ statusPens: 'notFull' }) },
-        })
+        const response = await useFetchGetClient(apiSvcPens, { params: { page: 1, limit: 999, filter: JSON.stringify({ statusPens: 'notFull' }) } })
         this.pens = getSuccessDataClient(response)?.list ?? []
-      } catch {}
+      } catch { }
     },
 
     async onSubmit() {
@@ -141,13 +153,13 @@ export default {
       this.$emit('onSubmit', {
         editId: this.editId,
         payload: {
-          batchName:       v.batchName       || null,
-          penId:           v.penId,
-          sourceType:      v.sourceType,
-          receivedDate:    v.receivedDate,
+          batchName: v.batchName || null,
+          penId: v.penId,
+          sourceType: v.sourceType,
+          receivedDate: v.receivedDate,
           initialQuantity: Number(v.initialQuantity),
-          averageWeight:   v.averageWeight ? Number(v.averageWeight) : null,
-          description:     v.description   || null,
+          averageWeight: v.averageWeight ? Number(v.averageWeight) : null,
+          description: v.description || null,
           ...(this.editId ? { status: v.status } : {}),
         },
       })

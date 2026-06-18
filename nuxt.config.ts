@@ -1,3 +1,5 @@
+import { resolve } from 'path'
+
 export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
@@ -18,9 +20,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       appVersion: process.env.APP_VERSION || '1.0',
-      apiBase: process.env.API_BASE || 'http://localhost:8082/api',
-      apiCms: process.env.API_CMS || 'http://localhost:8082/api',
-      apiBff: process.env.API_BFF || 'http://localhost:3011',
+      apiCms: process.env.API_CMS || 'http://localhost:8000/api',
     },
   },
 
@@ -60,6 +60,13 @@ export default defineNuxtConfig({
         ],
       },
     ],
+  },
+
+  // Workaround: @nuxt/schema sets alias['#build'] = withTrailingSlash(buildDir)
+  // which causes VirtualFSPlugin to resolve '#build/fetch.mjs' → '/app/.nuxt//fetch.mjs'
+  // (double slash), breaking VFS key lookup in Docker. Override without trailing slash.
+  alias: {
+    '#build': resolve(process.cwd(), '.nuxt'),
   },
 
   experimental: {

@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --ignore-scripts
 COPY . .
-ARG API_CMS=http://localhost:8000/api
+ARG API_CMS=/api
 ENV API_CMS=$API_CMS
 RUN npm run generate
 

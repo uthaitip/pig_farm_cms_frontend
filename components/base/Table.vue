@@ -201,7 +201,6 @@
         'rounded-r-md border-r-2':
           optionChildIndex ==
           parseDefaultChildrenOptions.length - 1,
-        // 'border-b-0': isExpanded(index),
       },
     ]">
                           <template v-if="$slots[`children-${optionChild.field}`]">

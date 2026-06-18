@@ -84,7 +84,6 @@
 
 <script lang="ts">
 import { useField } from "vee-validate";
-// import { Modal } from "flowbite";
 
 export default {
   props: {
@@ -163,7 +162,6 @@ export default {
       dShowPreview: false,
       isAttachment: false,
       changeField: {} as any,
-      // modal: {} as Modal,
       selected: null as any, // File or Attachment
       fileDesc: "" as any,
       fileSrc: "" as any,
@@ -227,11 +225,7 @@ export default {
     },
     openFile() {
       if (this.isAttachment || this.selected.publicUrl) {
-        // window.open(this.selected.publicUrl, '_blank');
-        // location.assign(this.parseDefaultField?.value?.publicUrl)
         this.fileSrc = this.selected.publicUrl;
-        // this.modal.show();
-
         this.sModalShowImageState?.show?.({
           title: "แสดงไฟล์",
           srcFile: this.fileSrc,
@@ -249,24 +243,6 @@ export default {
           srcFile: fileUrl,
           attachment: this.selected
         });
-        // const reader = new FileReader();
-        // reader.addEventListener("load", (event: any) => {
-        //   this.fileSrc = event.target.result;
-
-        //   // this.modal.show();
-        //   this.sModalShowImageState?.show?.({
-        //     title: "แสดงไฟล์",
-        //     srcFile: this.fileSrc,
-        //     attachment: this.selected
-        //   });
-        // });
-        // // if(file?.publicUrl){
-        // //   fetch(file?.publicUrl)
-        // //     .then(response => response.blob())
-        // //     .then(blob => reader.readAsDataURL(blob))
-        // // }else{
-        // reader.readAsDataURL(file);
-        // // }
       }
     },
   },

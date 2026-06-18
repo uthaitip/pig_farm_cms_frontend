@@ -59,10 +59,6 @@ export default {
     const sInputField = useField(props?.field?.key, rules, {
       initialValue: props?.field?.value,
     });
-    if (!!props?.field?.maskOption) {
-    }
-
-
     return { sInputField };
   },
   mounted() {
@@ -74,7 +70,6 @@ export default {
             this.sInputField.setValue("");
           } else if (!!this.sInputField.value?.value) {
             this.changeField.value = this.sInputField.value?.value;
-            // this.sInputField.setValue(this.sInputField.value?.value);
           }
         }
       });
@@ -108,10 +103,8 @@ export default {
 
       const formatted = num.toFixed(2);
 
-      // ✅ จุดสำคัญที่สุดของทั้งเรื่อง
       this.sInputField.setValue(formatted);
 
-      // (ถ้าต้องการให้ parent รู้ด้วย)
       this.$emit('blur', {
         field: this.parseDefaultField,
         value: formatted,
@@ -125,14 +118,10 @@ export default {
         value: value
       };
 
-      // setTimeout(() => {
-      // this.timeChangeDelay = new Date();
-
       this.$emit("onChange", {
         field: this.parseDefaultField,
         value: value,
       });
-      // }, 300);
     },
 
     onClickSuffix() {
@@ -155,11 +144,7 @@ export default {
     field: async function (n: any, o: any) {
       if (n?.value != null && n?.value != undefined && !this.parseDefaultField.useForm) {
         let isChangeByField = this.changeField.value != n.value;
-        // isChangeByField = isChangeByField || this.sInputField.value.value != n.value;
 
-        // const diffTime = new Date().getTime() - (this.timeChangeDelay?.getTime() ?? 0);
-        // const isOvertime = diffTime > 1000;
-        // if (isOvertime) {
         if (isChangeByField) {
           this.sInputField.setValue(n.value);
           this.$emit("onChange", {
@@ -167,27 +152,8 @@ export default {
             value: n.value,
           });
         }
-        // } else {
-        //   setTimeout(() => {
-        //     if (n.value != o.value) {
-        //       this.sInputField.setValue(n.value);
-        //       this.$emit("onChange", {
-        //         field: this.parseDefaultField,
-        //         value: n.value,
-        //       });
-        //     }
-        //   }, 300);
-        // }
 
         this.changeField = { ...n };
-
-        // setTimeout(() => {
-        //   if (isOvertime && !!this.timeChangeDelay) {
-        //     this.timeChangeDelay = undefined;
-        //   }
-        // }, 1000);
-
-
       }
     },
   },

@@ -5,7 +5,6 @@ export function getErrorBodyClient(response: any) {
 }
 
 export function getErrorMessageClient(response: any) {
-  console.log('getErrorBodyClient(response)?.details', getErrorBodyClient(response))
   return getErrorBodyClient(response)?.error?.details ?? 'เกิดข้อผิดพลาด'
 }
 

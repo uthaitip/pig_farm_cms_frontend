@@ -11,15 +11,6 @@ export function getIcon(name: string, type: "outline" | "solid" | string | Strin
       .join("");
     nameIcon = `${nameIcon}Icon`;
   }
-  // console.log(
-  //   "type :",
-  //   type,
-  //   ", nameIcon :",
-  //   nameIcon,
-  //   ", nameIcon :",
-  //   heroIcons[nameIcon]
-  // );
-
   if (!!heroIcons[nameIcon]) {
     return type == "solid"
       ? heroIcons[nameIcon].solid
